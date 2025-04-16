@@ -4,7 +4,6 @@ package pvlov;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -13,7 +12,6 @@ import reactor.test.StepVerifier;
 import java.time.Duration;
 
 @Testcontainers
-// @EnabledIfSystemProperty(named = "run.container.tests", matches = "true")
 public class ClamdClientTest {
 
     private static final int CLAMD_PORT = 3310;
@@ -55,11 +53,20 @@ public class ClamdClientTest {
     }
 
     @Test
-    void testSimpleScan() {
+    void testSimpleCleanScan() {
         final byte[] testData = "Hello, World!".getBytes();
 
         StepVerifier.create(clamdClient.scan(testData))
                 .expectNext(Scan.clean())
+                .verifyComplete();
+    }
+
+    @Test
+    void testSimpleInfectedScan() {
+        final byte[] testData = "X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*".getBytes();
+
+        StepVerifier.create(clamdClient.scan(testData))
+                .expectNextMatches(scan -> scan instanceof Scan.Infected)
                 .verifyComplete();
     }
 }
