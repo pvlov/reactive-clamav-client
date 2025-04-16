@@ -15,25 +15,34 @@ This project is **not production-ready**. It is intended solely as a reference o
 
 The project includes **rudimentary end-to-end tests** that verify the functionality of the client using [Testcontainers](https://www.testcontainers.org/). These tests spin up a ClamAV container to simulate a real ClamAV daemon and validate the scanning and health check features.
 
+To run the tests:
+
+```bash
+./gradlew test
+```
+
+## Benchmarking
+
+The project also includes some basic **benchmarking** code to measure the performance of the client. The benchmarks are not exhaustive and should be used as a starting point for performance evaluation.
+The benchmarking code will use 5MiB of data to simulate a file scan. 
+
+To run the benchmarks, first ensure that ClamAV is running on `localhost:3310` and then execute the following command:
+
+```bash
+./gradlew jmh
+```
+
+You might want to run ClamAV using Docker for testing purposes. You can do this with the following command:
+
+```bash
+docker run --rm -d mkodockx/docker-clamav:alpine
+```
+
 ## Requirements
 
 - Java 21
 - Gradle
 - Docker (for running Testcontainers)
-
-## Usage
-
-This project is intended as a reference implementation. To use it:
-
-1. Clone the repository.
-2. Build the project using Gradle:
-   ```bash
-   ./gradlew build
-   ```
-3. Run the tests:
-   ```bash
-   ./gradlew test
-   ```
 
 ## Limitations
 
