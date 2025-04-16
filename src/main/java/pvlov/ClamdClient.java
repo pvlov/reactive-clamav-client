@@ -40,9 +40,9 @@ public class ClamdClient {
      * the warmup process is initiated immediately after construction and blocks until
      * the client is fully initialized.
      *
-     * @param host                The hostname or IP address of the ClamAV daemon.
-     * @param port                The port number on which the ClamAV daemon is listening.
-     * @param maxConnections      The maximum number of connections to the ClamAV daemon.
+     * @param host                  The hostname or IP address of the ClamAV daemon.
+     * @param port                  The port number on which the ClamAV daemon is listening.
+     * @param maxConnections        The maximum number of connections to the ClamAV daemon.
      * @param pendingAcquireTimeout The timeout duration for acquiring a connection from the pool.
      */
     public ClamdClient(final String host, final int port, final int maxConnections, final Duration pendingAcquireTimeout) {
@@ -96,7 +96,7 @@ public class ClamdClient {
      * will return {@code false}.</p>
      *
      * @return A {@link Mono} emitting {@code true} if the ClamAV daemon responds
-     *         with "PONG", or {@code false} if it does not respond or an error occurs.
+     * with "PONG", or {@code false} if it does not respond or an error occurs.
      */
     public Mono<Boolean> isAlive() {
         return tcpClient
@@ -127,15 +127,15 @@ public class ClamdClient {
      *             any binary content, such as files or streams, that needs to be
      *             checked for threats.
      * @return A {@link Mono} emitting the {@link Scan} result, which can be one of
-     *         the following:
-     *         <ul>
-     *             <li>{@link Scan.Clean} - If the data is free of threats.</li>
-     *             <li>{@link Scan.Infected} - If the data contains a threat, with
-     *                 details provided in the response.</li>
-     *             <li>{@link Scan.SizeExceeded} - If the data exceeds the size limit
-     *                 allowed by the ClamAV daemon.</li>
-     *         </ul>
-     *         If an error occurs during the scan, the {@link Mono} will emit an error.
+     * the following:
+     * <ul>
+     *     <li>{@link Scan.Clean} - If the data is free of threats.</li>
+     *     <li>{@link Scan.Infected} - If the data contains a threat, with
+     *         details provided in the response.</li>
+     *     <li>{@link Scan.SizeExceeded} - If the data exceeds the size limit
+     *         allowed by the ClamAV daemon.</li>
+     * </ul>
+     * If an error occurs during the scan, the {@link Mono} will emit an error.
      */
     public Mono<Scan> scan(final byte[] data) {
 
@@ -171,7 +171,7 @@ public class ClamdClient {
      *
      * @param data The byte array to be split into INSTREAM-compatible packages.
      * @return A {@link Flux} emitting byte arrays, where each array represents a chunk
-     *         prefixed with its size in 4 bytes.
+     * prefixed with its size in 4 bytes.
      */
     private Flux<byte[]> intoInstreamPackages(final byte[] data) {
         return Flux.range(0, (data.length + CHUNK_SIZE - 1) / CHUNK_SIZE)

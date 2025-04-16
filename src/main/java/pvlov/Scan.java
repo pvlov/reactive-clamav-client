@@ -18,8 +18,10 @@ public sealed interface Scan permits Scan.Clean, Scan.Infected, Scan.SizeExceede
         public static final Clean INSTANCE = new Clean();
     }
 
-    record Infected(String response) implements Scan {}
+    record Infected(String response) implements Scan {
+    }
 
-    record SizeExceeded(String response) implements Scan {}
+    record SizeExceeded(String response) implements Scan {
+    }
 }
 
