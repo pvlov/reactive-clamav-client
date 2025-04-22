@@ -5,7 +5,6 @@ import org.openjdk.jmh.annotations.*;
 import java.time.Duration;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
 
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)

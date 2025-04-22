@@ -1,0 +1,16 @@
+[versions]
+spring = "6.2.6"
+reactor-core = "3.7.5"
+reactor-netty = "1.2.4"
+slf4j = "2.0.17"
+
+[libraries]
+spring-webflux = { module = "org.springframework:spring-webflux", version.ref = "spring" }
+spring-core = { module = "org.springframework:spring-core", version.ref = "spring" }
+spring-beans = { module = "org.springframework:spring-beans", version.ref = "spring" }
+
+reactor-core = { module = "io.projectreactor:reactor-core", version.ref = "reactor-core" }
+reactor-netty = { module = "io.projectreactor.netty:reactor-netty", version.ref = "reactor-netty" }
+
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }

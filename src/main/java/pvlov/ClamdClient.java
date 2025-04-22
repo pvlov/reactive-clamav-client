@@ -32,6 +32,8 @@ public class ClamdClient {
 
     private static final Publisher<byte[]> END_OF_INSTREAM = Mono.just("\0\0\0\0".getBytes(StandardCharsets.US_ASCII));
 
+    private static final Mono<String> ERROR_CLAMD_NOT_RUNNING = Mono.error(new IllegalStateException("ClamAV Server did not respond."));
+
     private final TcpClient tcpClient;
 
     /**
@@ -57,7 +59,8 @@ public class ClamdClient {
 
         this.tcpClient = TcpClient.create(pool)
                 .host(host)
-                .port(port);
+                .port(port)
+                .secure();
 
         tcpClient.warmup().block();
     }
@@ -83,12 +86,8 @@ public class ClamdClient {
 
     /**
      * Checks the availability of the ClamAV daemon by sending a PING command and
-     * verifying the response.
-     *
-     * <p> PING command to the ClamAV daemon test its responsiveness. The server is expected to reply
-     * with a "PONG" response if it is operational. The method uses a reactive
-     * approach, leveraging Project Reactor's {@link Mono} to handle the asynchronous
-     * communication.</p>
+     * verifying the response. The server is expected to reply with a "PONG" response
+     * if it is operational.
      *
      * <p><strong>Note:</strong> The ClamAV daemon must be running and accessible at
      * the configured host and port for this method to function correctly. If the
@@ -104,7 +103,7 @@ public class ClamdClient {
                 .flatMap(connection -> connection.outbound()
                         .sendByteArray(PING)
                         .then()
-                        .thenMany(connection.inbound().receive().asString())
+                        .thenMany(connection.inbound().receive().asString(StandardCharsets.US_ASCII))
                         .collect(Collectors.joining())
                 ).map(response -> response.contains("PONG"))
                 .onErrorReturn(false);
@@ -121,7 +120,9 @@ public class ClamdClient {
      *
      *
      * <p><strong>Note:</strong> The ClamAV daemon must be running and accessible at
-     * the configured host and port for this method to function correctly.</p>
+     * the configured host and port for this method to function correctly. If the daemon
+     * is not running or it decided to not return a response, the returned Mono will emit
+     * an {@link IllegalStateException}</p>
      *
      * @param data The byte array representing the data to be scanned. This can be
      *             any binary content, such as files or streams, that needs to be
@@ -139,9 +140,17 @@ public class ClamdClient {
      */
     public Mono<Scan> scan(final byte[] data) {
 
+        // Since an empty byte array will result in the datastream
+        // "zINSTREAM\0 \0\0\0\0 \0\0\0\0" being sent to the server
+        // we need to handle this case separately.
+        if (data.length == 0) {
+            // An empty byte array is considered clean.
+            return Mono.just(Scan.clean());
+        }
+
         final var dataStream = Flux.concat(
                 START_OF_INSTREAM,
-                intoInstreamPackages(data),
+                splitIntoPackages(data),
                 END_OF_INSTREAM
         );
 
@@ -153,10 +162,18 @@ public class ClamdClient {
                                 .then(
                                         conn.inbound()
                                                 .receive()
+                                                // We have to make sure to set the StandardCharsets here
+                                                // since we don't expect UTF-8 Data from the server.
+                                                // This saves a lot of performance since we skip the validation of UTF-8.
                                                 .asString(StandardCharsets.US_ASCII)
-                                                .next()
+                                                .collect(Collectors.joining(System.lineSeparator()))
+                                                // the funny part here is, that if the clamav daemon is not running
+                                                // it will just return an empty Mono, which in our case is an error.
+                                                .switchIfEmpty(ERROR_CLAMD_NOT_RUNNING)
                                                 .map(ClamdClient::translateResponse)
-                                ).doFinally(signalType -> conn.dispose()) // <-- ouch, maybe blocking?
+                                )
+                                // clean up connection no matter what
+                                .doOnTerminate(conn::dispose)
                 );
     }
 
@@ -173,7 +190,7 @@ public class ClamdClient {
      * @return A {@link Flux} emitting byte arrays, where each array represents a chunk
      * prefixed with its size in 4 bytes.
      */
-    private Flux<byte[]> intoInstreamPackages(final byte[] data) {
+    private Flux<byte[]> splitIntoPackages(final byte[] data) {
         return Flux.range(0, (data.length + CHUNK_SIZE - 1) / CHUNK_SIZE)
                 .map(i -> {
                     final int start = i * CHUNK_SIZE;
