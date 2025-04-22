@@ -13,12 +13,12 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 import static org.springframework.web.reactive.function.server.RequestPredicates.contentType;
 
 @Configuration
-public class ApplicationConfig {
+public class Config {
 
     @Bean
-    public RouterFunction<ServerResponse> routes (ApplicationController controller) {
+    public RouterFunction<ServerResponse> routes (ClamAvController controller) {
         return RouterFunctions.route()
-                .GET("/check", accept(MediaType.APPLICATION_OCTET_STREAM).and(contentType(MediaType.APPLICATION_JSON)), controller::check)
+                .POST("/check", accept(MediaType.APPLICATION_OCTET_STREAM).and(contentType(MediaType.APPLICATION_JSON)), controller::check)
                 .build();
     }
 
